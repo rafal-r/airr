@@ -16,7 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+/* latin-ext */
+@font-face {
+    font-family: 'Shadows Into Light Two';
+    font-style: normal;
+    font-weight: 400;
+    src: url(../fonts/ShadowsIntoLightTwo-Regular.ttf);
+    /*unicode-range: U+0100-024F, U+1E00-1EFF, U+20A0-20AB, U+20AD-20CF, U+2C60-2C7F, U+A720-A7FF;*/
+}
+/* latin */
+@font-face {
+    font-family: 'Shadows Into Light Two';
+    font-style: normal;
+    font-weight: 400;
+    src: url(../fonts/ShadowsIntoLightTwo-Regular.ttf);
+    /*unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;*/
+}
 
 /************* AIRR LIB STYLES ***************/
 * {
@@ -25,17 +40,21 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+*::-webkit-scrollbar { 
+    display: none;  // Safari and Chrome
+}
 :after, :before {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
-html,body,p,h1,h2,h3,h4,h5,h6,div,span,ul,li,a,input,textarea{
+html,body,p,h1,h2,h3,h4,h5,h6,div,span,ul,li,a,input,textarea,button{
     margin: 0;
     padding: 0;
     font-family: 'Shadows Into Light Two', Arial, Helvetica, sans-serif;
     color: #000;
 }
+
 html, body {
     background: #fff;
     overflow: hidden;
@@ -61,6 +80,63 @@ body {
     bottom: 0;
     right: 0;
     z-index: 110;
+}
+.mayer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 109;
+    background-color: rgba(240,240,210,0.7);
+
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+
+    -webkit-box-orient: vertical!important;
+    -ms-flex-direction: column!important;
+    flex-direction: column!important;
+
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+}
+
+.mayer .ctn {
+    background-color: #fff;
+    padding: 2rem;
+    position: relative;
+    width: 100%;
+}
+.mayer .text{
+    font-size: 1.2rem;
+}
+.mayer .btns{
+    padding-top: 1rem;
+    overflow: auto;
+}
+.mayer button {
+    padding: 0.5rem 1.5rem;
+    background-color: #000;
+    color: #fff;
+    font-size: 1.2rem;
+    height: auto;
+    margin-top: 0.3rem;
+}
+.mayer button:active {
+    background-color: #fff !important;
+    color: #000;
+}
+.mayer button:last-child {
+    float: right;
+}
+textarea:focus, input:focus{
+    outline: none;
 }
 *:focus {
     outline: none;
@@ -95,7 +171,16 @@ body {
     background-color: rgba(0,0,0,0.0);
     display: none;
 }
-.sidepanel > div {
+.sidepanel > div:first-child {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(0,0,0);
+    opacity: 0;
+}
+.sidepanel > div:last-child {
     background-color: #fff;
     -webkit-backface-visibility: hidden;    
     backface-visibility: hidden;    
@@ -137,8 +222,6 @@ body {
 .container.slide-animation > .view.animated {
     display: block;
 }
-
-
 
 /*CUSTOM*/
 #nav {

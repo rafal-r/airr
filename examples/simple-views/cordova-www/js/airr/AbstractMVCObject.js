@@ -16,6 +16,8 @@ AbstractMVCObject.prototype.init = function (config) {
     this.isInjected = false; //changes when appended to other dom object, not rendered!
     this.isRendered = false; //changes when appended
     //
+    this.i18n = false; //should loadTemplate method translate text using I18N object
+    //
     this.scene = null; //parent scene instance
     //
     this.whenReadyQueue = []; //functions array to call when ready, check whenReady method for descritpion of `ready` state
@@ -96,6 +98,9 @@ AbstractMVCObject.prototype.init = function (config) {
         if (config.hasOwnProperty('controller') && typeof config.controller === 'object') {
             this.controller = config.controller;
         }
+        if (config.hasOwnProperty('i18n') && typeof config.i18n === 'boolean') {
+            this.i18n = config.i18n;
+        }
     }
 
     return this;
@@ -110,7 +115,14 @@ AbstractMVCObject.prototype.loadTemplate = function (callback) {
             callback: function (responseText) {
                 if (!self.templateLoaded) { //load template only once **remember that check in here is required in face of async
                     self.templateLoaded = true;
-                    self.dom.innerHTML = responseText;
+                    
+                    if (self.i18n) {
+                        self.dom.innerHTML = I18N.translate(responseText);
+                    }
+                    else {
+                        self.dom.innerHTML = responseText;
+                    }
+                    
                     self.triggerWhenTemplateLoadedQueue(); //must be before whenReadyQueue because latter invokes scenes callback functions that waits for readiness
                     self.triggerWhenReadyQueue();
 
@@ -131,11 +143,16 @@ AbstractMVCObject.prototype.whenTemplateLoaded = function (callback) { //called 
     }
 };
 AbstractMVCObject.prototype.whenReady = function (callback) {//mainly used by parent scene object to determine if child is ready to be appended
-    if (this.templateLoaded || !this.autoload) {
-        callback.call(this);
+    if (this.templateUrl) {
+        if (this.templateLoaded || !this.autoload) {
+            callback.call(this);
+        }
+        else {
+            this.whenReadyQueue.push(callback);
+        }
     }
     else {
-        this.whenReadyQueue.push(callback);
+        callback.call(this);
     }
 };
 AbstractMVCObject.prototype.whenRendered = function (callback) { //when rendered means that is added to document DOM tree
@@ -294,17 +311,18 @@ AbstractMVCObject.prototype.off = function (eventName, handler) {
         this.domEventsMap[name] = null;
     }
     else {
-        throw new Error('This object doesn\'t posses such handler. Event: ' + eventName + '. Handler: ' + handler.name);
+//        throw new Error('This object doesn\'t posses such handler. Event: ' + eventName + '. Handler: ' + handler.name);
+        console.error('This object doesn\'t posses such handler. Event: ' + eventName + '. Handler: ' + handler.name);
     }
 };
 /**
  * Attach DOM event listener.
  * @param {string} eventName
  * @param {function} handler
- * @param {bool} useCapture
+ * @param {bool|object} useCaptureOrOpt
  * @param {array} extraParams
  */
-AbstractMVCObject.prototype.on = function (eventName, handler, useCapture, extraParams) {
+AbstractMVCObject.prototype.on = function (eventName, handler, useCaptureOrOpt, extraParams) {
     var self = this;
     var name = eventName + '-' + handler.name;
     var obj = {};
@@ -321,9 +339,9 @@ AbstractMVCObject.prototype.on = function (eventName, handler, useCapture, extra
         handler.apply(self, params);
     };
     this.domEventsMap[name] = obj[name];
-    this.dom.addEventListener(eventName, obj[name], useCapture);
+    this.dom.addEventListener(eventName, obj[name], useCaptureOrOpt);
 };
-AbstractMVCObject.prototype.once = function (eventName, handler, useCapture, extraParams) {
+AbstractMVCObject.prototype.once = function (eventName, handler, useCaptureOrOpt, extraParams) {
     var self = this;
     var name = eventName + '-' + handler.name;
     var obj = {};
@@ -342,7 +360,7 @@ AbstractMVCObject.prototype.once = function (eventName, handler, useCapture, ext
         handler.apply(self, params);
     };
     this.domEventsMap[name] = obj[name];
-    this.dom.addEventListener(eventName, obj[name], useCapture);
+    this.dom.addEventListener(eventName, obj[name], useCaptureOrOpt);
 };
 
 AbstractMVCObject.prototype.reportAction = function (actionName, params) {

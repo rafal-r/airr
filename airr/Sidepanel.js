@@ -106,12 +106,32 @@ Sidepanel.prototype.updateSide = function (side) {
     this.dragCtn.style.webkitTransform = this.transformScheme.replace('%v', this.hiddenVal);
     this.dragCtn.style.transform = this.transformScheme.replace('%v', this.hiddenVal);
 };
+Sidepanel.prototype.bubbleChildTillParent = function(child, parent, tillElements) {
+    if (child.parentNode === parent) {
+        return true;
+    }
+    else {
+        if (!child.parentNode || tillElements.indexOf(child.parentNode) !== -1) {
+            return false;
+        }
+        else {
+            return this.bubbleChildTillParent(child.parentNode, parent, tillElements);
+        }
+    }
+};
 Sidepanel.prototype.touchStartHandler = function (e, me) {
     var pos = e.changedTouches[0]['client' + me.axis];
     var dragCtnOnTouchPath = false;
     
-    for (var i=0;i<e.path.length;i++) {
-        if (e.path[i] === me.dragCtn) {
+    if (e.path) {
+        for (var i=0;i<e.path.length;i++) {
+            if (e.path[i] === me.dragCtn) {
+                dragCtnOnTouchPath = true;
+            }
+        }
+    }
+    else {
+        if (e.target === me.dragCtn || (me.bubbleChildTillParent(e.target, me.dragCtn, [me.dragCtn.parentNode, document.body]))) {
             dragCtnOnTouchPath = true;
         }
     }

@@ -37,8 +37,8 @@ View.prototype.isActive = function () {
 };
 View.prototype.activate = function (callback) {
     var self = this;
-    
     this._active = true;
+    
     if (this.scene) {
         if (this.scene._activeView) {
             this.scene._activeView.deactivate();
@@ -55,7 +55,7 @@ View.prototype.activate = function (callback) {
         }
     }
     
-    if (!this.templateLoaded) { 
+    if (this.templateUrl && !this.templateLoaded) { 
         //this.autoload have already trigger loading just before this statement
         //to ensure no double load tries we cancel loading in here
         if (this.autoload) {
@@ -72,15 +72,25 @@ View.prototype.activate = function (callback) {
     return this;
 };
 View.prototype.whenReady = function (callback) { //mainly used by parent scene object to determine if child is ready to be appended
-    if (this.templateLoaded || (!this._active && !this.autoload)) {
-        callback.call(this);
+    if (this.templateUrl) {
+        if (this.templateLoaded || (!this._active && !this.autoload)) {
+            callback.call(this);
+        }
+        else {
+            this.whenReadyQueue.push(callback);
+        }
     }
     else {
-        this.whenReadyQueue.push(callback);
+        callback.call(this);
     }
 };
 //removes own dom object from parent scene
 //removes parent scene reference
-View.prototype.kill = function (callback) {
-    //TODO
+View.prototype.kill = function () {
+    console.log('killing ' + this.name);
+    
+    if (this.scene) {
+        this.scene.viewsRefs.splice(this.scene.getViewIndex(this.name), 1);
+    }
+    this.dom.parentNode.removeChild(this.dom);
 };
