@@ -1,3 +1,5 @@
+/* global Airr, I18N, AbstractMVCObject */
+
 var Sidepanel = function (cfg) {
     return this.init(cfg);
 };
@@ -9,6 +11,7 @@ Sidepanel.prototype.init = function (config) {
     this.addClass('sidepanel');
     //DOM objects
     this.dragCtn = document.createElement('div');
+    this.bgLayer = document.createElement('div');
     this.hiddenVal;
     this.shownVal;
     this.currentVal;
@@ -18,6 +21,9 @@ Sidepanel.prototype.init = function (config) {
     this.axis = '';
     this.sceneSize;
     this.lastTouch;
+    this.enabled;
+
+    this.dom.appendChild(this.bgLayer);
     this.dom.appendChild(this.dragCtn);
 
     var self = this;
@@ -28,8 +34,7 @@ Sidepanel.prototype.init = function (config) {
         if (typeof config === 'object') {
             if (config.hasOwnProperty('side') && typeof config.side === "string" && ['left', 'right', 'top', 'bottom'].indexOf(config.side) !== -1) {
                 this.side = config.side;
-            }
-            else {
+            } else {
                 this.side = 'right';
             }
         }
@@ -37,8 +42,7 @@ Sidepanel.prototype.init = function (config) {
         this.scene.whenRendered(function () {
             self.updateSide(self.side);
         });
-    }
-    else {
+    } else {
         throw new Error('Sidepanel requires its scene instance in config object!');
     }
 
@@ -53,12 +57,19 @@ Sidepanel.prototype.loadTemplate = function (callback) {
         method: 'get',
         url: self.templateUrl,
         callback: function (responseText) {
-            self.templateLoaded = true;
-            self.dragCtn.innerHTML = responseText;
-            self.triggerWhenTemplateLoadedQueue();
-            
-            if (typeof callback === 'function') {
-                callback();
+            if (!self.templateLoaded) { //load template only once **remember that check in here is required in face of async
+                self.templateLoaded = true;
+
+                if (self.i18n) {
+                    self.dragCtn.innerHTML = I18N.translate(responseText);
+                } else {
+                    self.dragCtn.innerHTML = responseText;
+                }
+                self.triggerWhenTemplateLoadedQueue();
+
+                if (typeof callback === 'function') {
+                    callback();
+                }
             }
         }
     });
@@ -75,8 +86,7 @@ Sidepanel.prototype.updateSide = function (side) {
 
         this.dragCtn.style.width = this.size + 'px';
         this.dragCtn.style.height = '100%';
-    }
-    else { //top,bottom
+    } else { //top,bottom
         this.size = this.scene.getHeight() * 1 / 4;
         this.sceneSize = this.scene.getHeight();
         this.hiddenVal = this.side === 'top' ? -1 * this.size : this.scene.getHeight();
@@ -89,8 +99,7 @@ Sidepanel.prototype.updateSide = function (side) {
 
     if (this.side === 'top' || this.side === 'left') {
         this.shownVal = 0;
-    }
-    else {
+    } else {
         this.shownVal = this.sceneSize - this.size;
     }
 
@@ -99,38 +108,47 @@ Sidepanel.prototype.updateSide = function (side) {
 };
 Sidepanel.prototype.touchStartHandler = function (e, me) {
     var pos = e.changedTouches[0]['client' + me.axis];
-
-    if (e.target !== me.dragCtn && ((['left', 'top'].indexOf(me.side) !== -1 && pos < 10)
-            || (['right', 'bottom'].indexOf(me.side) !== -1 && pos > (me.hiddenVal - 10)))) { //corner touch, show moves
+    var dragCtnOnTouchPath = false;
+    
+    for (var i=0;i<e.path.length;i++) {
+        if (e.path[i] === me.dragCtn) {
+            dragCtnOnTouchPath = true;
+        }
+    }
+    
+    if (!dragCtnOnTouchPath && ((['left', 'top'].indexOf(me.side) !== -1 && pos < 20)
+            || (['right', 'bottom'].indexOf(me.side) !== -1 && pos > (me.hiddenVal - 20)))) { //corner touch, show moves
 
         me.dom.style.display = 'block';
-        me.scene.on(Airr.eventsNames.touchMove, me.showTouchMoveHandler, false, [me]);
+        me.scene.on(Airr.eventsNames.touchMove, me.showTouchMoveHandler, Airr.supportsPassive ? {passive: true} : false, [me]);
         me.scene.on(Airr.eventsNames.touchEnd, me.touchEndHandler, false, [me]);
-        
+
         me.triggerCustom('showTouchStart');
-        
+
         me.scene.once(Airr.eventsNames.touchEnd, function showmoveend() {
             me.scene.off(Airr.eventsNames.touchMove, me.showTouchMoveHandler);
             me.triggerCustom('showTouchEnd');
         }, false, [me]);
-    }
-    else if (me.currentVal === me.shownVal) { //fully visible, hide moves
-        me.scene.on(Airr.eventsNames.touchMove, me.hideTouchMoveHandler, false, [me]);
+    } else if (me.currentVal === me.shownVal) { //fully visible, hide moves
+        me.scene.on(Airr.eventsNames.touchMove, me.hideTouchMoveHandler, Airr.supportsPassive ? {passive: true} : false, [me]);
         me.scene.on(Airr.eventsNames.touchEnd, me.touchEndHandler, false, [me]);
-        
+
         me.triggerCustom('hideTouchStart');
-        
+
         me.scene.once(Airr.eventsNames.touchEnd, function hidemoveend() {
             me.scene.off(Airr.eventsNames.touchMove, me.hideTouchMoveHandler);
             me.triggerCustom('hideTouchEnd');
         }, false, [me]);
     }
 
-    if (e.target === me.dom) { //tap to hide
+
+    if (e.target === me.bgLayer) { //tap to hide
+
         if ((['left', 'top'].indexOf(me.side) !== -1 && me.currentVal === 0)
                 || ['right', 'bottom'].indexOf(me.side) !== -1 && me.currentVal) {
             me.scene.once(Airr.eventsNames.touchEnd, function hidedragctn(e, me) {
-                if (pos === e.changedTouches[0]['client' + me.axis]) {
+
+                if (Math.abs(pos - e.changedTouches[0]['client' + me.axis]) <= 2.5) { //pozwolenie na małą różnice
                     me.hide();
                 }
             }, false, [me]);
@@ -141,58 +159,52 @@ Sidepanel.prototype.touchStartHandler = function (e, me) {
 };
 Sidepanel.prototype.hideTouchMoveHandler = function (e, me) {
     var move, progress, newVal, change, moveAxis;
-    
+
     if (me.lastTouch) {
         if (Math.abs(me.lastTouch.clientX - e.changedTouches[0].clientX) >= Math.abs(me.lastTouch.clientY - e.changedTouches[0].clientY)) {
             if (e.changedTouches[0].clientX - me.lastTouch.clientX <= 0) {
                 move = 'left';
                 moveAxis = 'X';
-            }
-            else {
+            } else {
                 move = 'right';
                 moveAxis = 'X';
             }
-        }
-        else {
+        } else {
             if (e.changedTouches[0].clientY - me.lastTouch.clientY <= 0) {
                 move = 'top';
                 moveAxis = 'Y';
-            }
-            else {
+            } else {
                 move = 'bottom';
                 moveAxis = 'Y';
             }
         }
     }
-    
-    if (moveAxis === me.axis 
+
+    if (moveAxis === me.axis
             && (
-                (['left', 'top'].indexOf(me.side) !== -1 && e.changedTouches[0]['client' + moveAxis] < me.size) 
-                || (['right', 'bottom'].indexOf(me.side) !== -1 && e.changedTouches[0]['client' + moveAxis] > (me.hiddenVal - me.size))
-            )) {
+                    (['left', 'top'].indexOf(me.side) !== -1 && e.changedTouches[0]['client' + moveAxis] < me.size)
+                    || (['right', 'bottom'].indexOf(me.side) !== -1 && e.changedTouches[0]['client' + moveAxis] > (me.hiddenVal - me.size))
+                    )) {
         change = e.changedTouches[0]['client' + me.axis] - me.lastTouch['client' + me.axis];
         newVal = me.currentVal + change;
-        
+
         if (me.side === 'left' || me.side === 'top') {
 
             if (newVal < me.hiddenVal) {
                 newVal = me.hiddenVal;
-            }
-            else if (newVal > me.shownVal) {
+            } else if (newVal > me.shownVal) {
                 newVal = me.shownVal;
             }
-            
+
             progress = 1 - Math.abs(newVal / me.size);
-        }
-        else {
-            
+        } else {
+
             if (newVal > me.hiddenVal) {
                 newVal = me.hiddenVal;
-            }
-            else if (newVal < me.shownVal) {
+            } else if (newVal < me.shownVal) {
                 newVal = me.shownVal;
             }
-            
+
             progress = (me.sceneSize - newVal) / me.size;
         }
 
@@ -200,14 +212,18 @@ Sidepanel.prototype.hideTouchMoveHandler = function (e, me) {
             me.currentVal = newVal;
             progress = parseFloat(progress);
             progress = progress > 1 ? 1 : progress < 0 ? 0 : progress;
-            me.dom.style.backgroundColor = 'rgba(0,0,0,' + (0.7 * progress) + ')';
+
+            me.bgLayer.style.opacity = progress * 0.7;
+
             me.dragCtn.style.webkitTransform = me.transformScheme.replace('%v', me.currentVal);
             me.dragCtn.style.transform = me.transformScheme.replace('%v', me.currentVal);
         }
     }
 
     me.lastTouch = e.changedTouches[0];
-    e.preventDefault();
+    if (!Airr.supportsPassive) {
+        e.preventDefault();
+    }
 };
 Sidepanel.prototype.showTouchMoveHandler = function (e, me) {
     var pos = e.changedTouches[0]['client' + me.axis];
@@ -216,17 +232,14 @@ Sidepanel.prototype.showTouchMoveHandler = function (e, me) {
     if (['left', 'top'].indexOf(me.side) !== -1) {
         if (pos <= (-1 * me.hiddenVal)) {
             newVal = me.hiddenVal + pos;
-        }
-        else {
+        } else {
             newVal = me.shownVal;
         }
         progress = pos / me.size;
-    }
-    else {
+    } else {
         if (me.hiddenVal - pos <= me.size) {
             newVal = pos;
-        }
-        else {
+        } else {
             newVal = me.shownVal;
         }
         progress = (me.sceneSize - pos) / me.size;
@@ -236,37 +249,38 @@ Sidepanel.prototype.showTouchMoveHandler = function (e, me) {
         me.currentVal = newVal;
         progress = parseFloat(progress);
         progress = progress > 1 ? 1 : progress < 0 ? 0 : progress;
-        me.dom.style.backgroundColor = 'rgba(0,0,0,' + (0.7 * progress) + ')';
+
+        me.bgLayer.style.opacity = progress * 0.7;
+
         me.dragCtn.style.webkitTransform = me.transformScheme.replace('%v', me.currentVal);
         me.dragCtn.style.transform = me.transformScheme.replace('%v', me.currentVal);
     }
 
     me.lastTouch = e.changedTouches[0];
-    e.preventDefault();
+
+    if (!Airr.supportsPassive) {
+        e.preventDefault();
+    }
 };
 Sidepanel.prototype.touchEndHandler = function (e, me) {
     var val = null;
-    
+
     if (me.currentVal !== me.shownVal && me.currentVal !== me.hiddenVal) {
         if (['left', 'top'].indexOf(me.side) !== -1) {
             if (me.currentVal >= (me.hiddenVal / 2)) {
                 val = me.shownVal;
-            }
-            else {
+            } else {
                 val = me.hiddenVal;
             }
 
-        }
-        else {
+        } else {
             if (me.currentVal < me.hiddenVal - (me.size / 2)) {
                 val = me.shownVal;
-            }
-            else {
+            } else {
                 val = me.hiddenVal;
             }
         }
-    }
-    else if (me.currentVal === me.hiddenVal) {
+    } else if (me.currentVal === me.hiddenVal) {
         me.dom.style.display = 'none';
     }
 
@@ -280,26 +294,41 @@ Sidepanel.prototype.hide = function () {
     return this.translateTo(this.hiddenVal);
 };
 Sidepanel.prototype.show = function () {
-    return this.translateTo(0);
+    return this.translateTo(this.shownVal);
+};
+Sidepanel.prototype.isShown = function () {
+    return (this.dom.offsetParent !== null);
 };
 Sidepanel.prototype.enable = function () {
-    this.scene.on(Airr.eventsNames.touchStart, this.touchStartHandler, false, [this]);
+    if (!this.isEnabled()) {
+        this.scene.on(Airr.eventsNames.touchStart, this.touchStartHandler, Airr.supportsPassive ? {passive: true} : false, [this]);
+        this.enabled = true;
+    }
 };
 Sidepanel.prototype.disable = function () {
-    this.scene.off(Airr.eventsNames.touchStart, this.touchStartHandler);
+    if (this.isEnabled()) {
+        this.scene.off(Airr.eventsNames.touchStart, this.touchStartHandler);
+        this.enabled = false;
+    }
+};
+Sidepanel.prototype.isEnabled = function () {
+    return this.enabled;
 };
 Sidepanel.prototype.translateTo = function (finishVal) {
     var self = this;
 
-    this.dom.style.webkitTransition = 'background-color 0.2s ease-in';
-    this.dom.style.transition = 'background-color 0.2s ease-in';
+    this.bgLayer.style.webkitTransition = 'opacity .2s ease-in';
+    this.bgLayer.style.transition = 'opacity .2s ease-in';
+    this.bgLayer.offsetHeight;
 
-    this.dom.offsetHeight;
     if (finishVal === this.shownVal) {
-        this.dom.style.backgroundColor = 'rgba(0,0,0,0.7)';
-    }
-    else if (finishVal === this.hiddenVal) {
-        this.dom.style.backgroundColor = 'rgba(0,0,0,0.0)';
+        if (!this.isShown()) {
+            this.dom.style.display = 'block';
+        }
+
+        this.bgLayer.style.opacity = 0.7;
+    } else if (finishVal === this.hiddenVal) {
+        this.bgLayer.style.opacity = 0;
     }
     this.dom.offsetHeight;
     this.dom.style.webkitTransition = 'initial';
@@ -318,6 +347,9 @@ Sidepanel.prototype.translateTo = function (finishVal) {
     this.dragCtn.style.transition = 'initial';
 
     setTimeout(function () {
+        self.bgLayer.style.webkitTransition = 'initial';
+        self.bgLayer.style.transition = 'initial';
+
         self.currentVal = finishVal;
         if (finishVal === self.hiddenVal) {
             self.dom.style.display = 'none';

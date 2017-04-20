@@ -10,10 +10,10 @@ Airr.utils = (function () {
         }
         return size;
     };
-    
+
     this.inherit = (function () {
-        var F = function() {};
-        return function(Child, Parent){
+        var F = function () {};
+        return function (Child, Parent) {
             F.prototype = Parent.prototype;
             Child.prototype = new F();
             Child.uber = Parent.prototype;
@@ -28,14 +28,27 @@ Airr.utils = (function () {
                 obj3[attrname] = obj1[attrname];
             }
         }
-        
+
         for (var attrname in obj2) {
             if (obj2.hasOwnProperty(attrname)) {
                 obj3[attrname] = obj2[attrname];
             }
         }
-        
+
         return obj3;
+    };
+
+    this.cloneObject = function (obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        var temp = obj.constructor(); // give temp the original obj's constructor
+        for (var key in obj) {
+            temp[key] = this.cloneObject(obj[key]);
+        }
+
+        return temp;
     };
     
     return this;
