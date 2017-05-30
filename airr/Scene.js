@@ -1,4 +1,4 @@
-/* global HTMLElement */
+/* global HTMLElement, Airr */
 
 var Scene = function (config) {
     return this.init(config);
@@ -315,59 +315,25 @@ Scene.prototype.changeActiveView = function (which, onEndCallback, disableViewpo
 };
 
 Scene.prototype.doSlideAnimation = function (newView, onEndCallback) {
-    var self = this;
-    var direction = this.viewsRefs.indexOf(newView) > this.viewsRefs.indexOf(this._activeView) ? 1 : -1;
-
-    newView.addClass('animated');
-
-    if (direction === -1) {
-        this.container.style.webkitTransform = 'translate3d(' + (-1 * this.dom.clientWidth) + 'px,0,0)';
-        this.container.style.transform = 'translate3d(' + (-1 * this.dom.clientWidth) + 'px,0,0)';
-
-        this.container.offsetHeight; // Trigger a reflow, flushing the CSS changes
-
-        this.container.classList.add('animated');
-        this.container.style.webkitTransform = 'translate3d(0,0,0)';
-        this.container.style.transform = 'translate3d(0,0,0)';
-    } else {
-        this.container.classList.add('animated');
-        this.container.style.webkitTransform = 'translate3d(' + (-1 * this.dom.clientWidth) + 'px,0,0)';
-        this.container.style.transform = 'translate3d(' + (-1 * this.dom.clientWidth) + 'px,0,0)';
-    }
-
-    setTimeout(function () {
-        newView.removeClass('animated');
+    function fin() {
         newView.activate();
-        self.container.classList.remove('animated');
-        self.container.style.webkitTransform = 'translate3d(0,0,0)';
-        self.container.style.transform = 'translate3d(0,0,0)';
-
         if (typeof onEndCallback === 'function') {
             onEndCallback();
         }
-    }, 300);
+    }
+    
+    var direction = this.viewsRefs.indexOf(newView) > this.viewsRefs.indexOf(this._activeView) ? 1 : -1;
+    Airr.FX.doSlideAnimation(newView.dom, this.dom, this.container, 300, direction, fin);
 };
 Scene.prototype.doOverlayAnimation = function (newView, onEndCallback) {
-    newView.dom.style.webkitTransform = 'scale(0, 1) translate3d(0,' + this.dom.clientHeight + 'px,0)';
-    newView.dom.style.transform = 'scale(0, 1) translate3d(0,' + this.dom.clientHeight + 'px,0)';
-
-    newView.dom.offsetHeight; // Trigger a reflow, flushing the CSS changes
-
-    newView.addClass('animated');
-
-    newView.dom.style.webkitTransform = 'scale(1, 1) translate3d(0,0,0)';
-    newView.dom.style.transform = 'scale(1, 1) translate3d(0,0,0)';
-
-    setTimeout(function () {
+    function fin() {
         newView.activate();
-        newView.dom.style.webkitTransform = 'initial';
-        newView.dom.style.transform = 'initial';
-        newView.removeClass('animated');
-
         if (typeof onEndCallback === 'function') {
             onEndCallback();
-        }
-    }, 1000);
+        }        
+    }
+    
+    Airr.FX.doOverlayAnimation(newView.dom, this.dom, 300, 'top', fin);
 };
 Scene.prototype.hasMayer = function (id) {
     if (typeof id === 'string') {
@@ -459,12 +425,12 @@ Scene.prototype.enableMayer = function (htmlContent, buttons, attrs) {
 
     var domHeight = this.getHeight();
     if (content.clientHeight >= domHeight) {
-        content.style.position = 'static';
         content.style.height = domHeight + 'px';
         content.style.overflow = 'scroll';
     }
-
+    
     mask.style.visibility = 'visible';
+    Airr.FX.doOverlayAnimation(content, mask, 300, 'left');
 };
 Scene.prototype.disableMayer = function (idOrElement) {
     if (idOrElement instanceof HTMLElement) {

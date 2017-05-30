@@ -87,7 +87,7 @@ View.prototype.whenReady = function (callback) { //mainly used by parent scene o
 //removes own dom object from parent scene
 //removes parent scene reference
 View.prototype.kill = function () {
-    console.log('killing ' + this.name);
+    //console.log('killing ' + this.name);
     
     if (this.scene) {
         this.scene.viewsRefs.splice(this.scene.getViewIndex(this.name), 1);

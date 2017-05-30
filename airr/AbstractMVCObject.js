@@ -15,6 +15,7 @@ AbstractMVCObject.prototype.init = function (config) {
     this.injectOnTplLoaded = false; //if set to true append dom node after tpl is loaded //TODO check if this variable wouldn't simplefie Scene waiting for Views ready procedures
     this.isInjected = false; //changes when appended to other dom object, not rendered!
     this.isRendered = false; //changes when appended
+    this.resourcesLoaded = false;
     //
     this.i18n = false; //should loadTemplate method translate text using I18N object
     //
@@ -23,7 +24,8 @@ AbstractMVCObject.prototype.init = function (config) {
     this.whenReadyQueue = []; //functions array to call when ready, check whenReady method for descritpion of `ready` state
     this.whenRenderedQueue = []; //functions array to call when rendered, check whenRendered method for descritpion of `rendered` state
     this.whenTemplateLoadedQueue = []; //functions array to call when tpl loaded, check whenTemplateLoaded method for descritpion of `tpl loaded` state
-    this.whenable = ['whenReady', 'whenRendered', 'whenTemplateLoaded'];
+    this.whenResourcesLoadedQueue = []; //functions array to call when resurces loaded, check whenResourcesLoaded method for descritpion of `resources loaded` state
+    this.whenable = ['whenReady', 'whenRendered', 'whenTemplateLoaded', 'whenResourcesLoaded'];
     this.when = {};
     //
     this.domEventsMap = {};
@@ -126,12 +128,43 @@ AbstractMVCObject.prototype.loadTemplate = function (callback) {
                     self.triggerWhenTemplateLoadedQueue(); //must be before whenReadyQueue because latter invokes scenes callback functions that waits for readiness
                     self.triggerWhenReadyQueue();
 
+                    var resources = self.dom.querySelectorAll('img');
+                    if (resources) {
+                        var loaded = 0;
+                        for (var i = 0; i < resources.length; i++) {
+                            if (resources[i].complete) {
+                                loaded++;
+                                if (loaded === resources.length) {
+                                    self.resourcesLoaded = true;
+                                    self.triggerWhenResourcesLoadedQueue();
+                                }
+                            }
+                            else {
+                                resources[i].onload = function() {
+                                    loaded++;
+                                    if (loaded === resources.length) {
+                                        self.resourcesLoaded = true;
+                                        self.triggerWhenResourcesLoadedQueue();
+                                    }
+                                };
+                            }
+                        }
+                    }
+                    
                     if (typeof callback === 'function') {
                         callback();
                     }
                 }
             }
         });
+    }
+};
+AbstractMVCObject.prototype.whenResourcesLoaded = function (callback) { //called when template is loaded and all images completed loading
+    if (this.resourcesLoaded) {
+        callback.call(this);
+    }
+    else {
+        this.whenResourcesLoadedQueue.push(callback);
     }
 };
 AbstractMVCObject.prototype.whenTemplateLoaded = function (callback) { //called when template is loaded and signed to self.dom.innerHtml
@@ -189,6 +222,15 @@ AbstractMVCObject.prototype.triggerWhenTemplateLoadedQueue = function () {
     }
 
     this.whenTemplateLoadedQueue = [];
+};
+AbstractMVCObject.prototype.triggerWhenResourcesLoadedQueue = function () {
+    for (var i = 0; i < this.whenResourcesLoadedQueue.length; i++) {
+        if (typeof this.whenResourcesLoadedQueue[i] === 'function') {
+            this.whenResourcesLoadedQueue[i].call(this);
+        }
+    }
+
+    this.whenResourcesLoadedQueue = [];
 };
 AbstractMVCObject.prototype.removeClass = function (className) {
     this.dom.classList.remove(className);

@@ -10,6 +10,7 @@ var Airr = (function () {
         viewConfig: {},
         sidepanelConfig: {},
         sceneConfig: {},
+        commonConfig: {},
         i18n: null, //I18N object - use internationalization ? default null - initialize if Airr::start config.lang attribute is passed
         supportsPassive: false // assume the feature isn't supported
     };
@@ -88,6 +89,15 @@ var Airr = (function () {
         self.sceneConfig[name] = config;
     };
 
+    self.declareCommonConfig = function (name, config) {
+        config.name = name;
+        self.commonConfig[name] = config;
+    };
+    
+    self.getCommonConfig = function(name) {
+        return self.commonConfig[name];
+    };
+    
     self.initAppI18N = function (config, callback) {
         self.i18n = I18N;
 
