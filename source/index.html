@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *;">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/styles.css">
+        <title>Airr Presents</title>
+
+        <style>
+            #splash {
+                position: fixed; 
+                top: 0; 
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background: #1e5799; /* Old browsers */
+                background: -moz-linear-gradient(top,  #1e5799 0%, #2989d8 50%, #207cca 51%, #7db9e8 100%); /* FF3.6-15 */
+                background: -webkit-linear-gradient(top,  #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* Chrome10-25,Safari5.1-6 */
+                background: linear-gradient(to bottom,  #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#7db9e8',GradientType=0 ); /* IE6-9 */
+
+                z-index: 200;
+                opacity: 1;
+                -webkit-transition: opacity 1s linear;
+                transition: opacity 1s linear;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="hidden"><!-- #AIRR-PRELOADS --></div>
+
+        <div id="splash">
+
+        </div>
+
+
+        <script type="text/javascript" src="cordova.js"></script>
+
+        <!-- #AIRR-SCRIPT -->
+
+        <!-- FRAMEWORK-->
+        <script type="text/javascript" src="js/airr/JSCompatibility.js"></script>
+        <script type="text/javascript" src="js/airr/Airr.js"></script>
+        <script type="text/javascript" src="js/airr/Utils.js"></script>
+        <script type="text/javascript" src="js/airr/AbstractMVCObject.js"></script>
+        <script type="text/javascript" src="js/airr/MVCObject.js"></script>
+        <script type="text/javascript" src="js/airr/Sidepanel.js"></script>
+        <script type="text/javascript" src="js/airr/View.js"></script>
+        <script type="text/javascript" src="js/airr/Scene.js"></script>
+        <script type="text/javascript" src="js/airr/I18n.js"></script>
+        <script type="text/javascript" src="js/airr/FX.js"></script>
+
+        <!-- CONSTANTS-->
+        <script type="text/javascript" src="app/const.js"></script>
+
+        <!-- CUSTOM VIEWS-->
+        <script type="text/javascript" src="app/view-model/Viewport.js"></script>
+        <script type="text/javascript" src="app/view-model/Blue.js"></script>
+        <script type="text/javascript" src="app/view-model/Green.js"></script>
+        <script type="text/javascript" src="app/view-model/Red.js"></script>
+        <script type="text/javascript" src="app/view-model/nav/slide-scene-nav.js"></script>
+
+        <!-- SIDEPANEL-->
+        <script type="text/javascript" src="app/view-model/sidepanel/Panel.js"></script>
+        <!-- UI-->
+        <script type="text/javascript" src="app/view-model/mayer/LongContentMayer.js"></script>
+
+        <script type="text/javascript" src="app/app.js"></script>
+        <!-- #AIRR-SCRIPT-END -->
+    </body>
+</html>
