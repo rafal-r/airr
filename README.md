@@ -14,8 +14,8 @@ installed node.js and cordova
 with your command shell go to downloaded or cloned repo directory and run in this order:
 
 1. `npm install`
-2. `cordova platform add (android | ios)`
-3. `node airr.js [-d --debug]` - this commands builds our final app structure placed inside `www` directory
+2. `node airr.js [-d --debug]` - this commands builds our final app structure placed inside `www` directory
+3. `cordova platform add (android | ios)`
 4. `cordova prepare (android | ios)`
 5. `cordova run (android | ios)`
 

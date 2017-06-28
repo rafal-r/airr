@@ -138,6 +138,15 @@ function deleteReccur(path) {
 
 index_html_content = fs.readFileSync(appPath + 'index.html', {encoding: 'utf8'});
 
+if (!fs.existsSync('hooks/')) {
+    fs.mkdirSync('hooks/', '0775');
+}
+if (!fs.existsSync('platforms/')) {
+    fs.mkdirSync('platforms/', '0775');
+}
+if (!fs.existsSync('plugins')) {
+    fs.mkdirSync('plugins/', '0775');
+}
 if (!fs.existsSync(outAppPath)) {
     fs.mkdirSync(outAppPath, '0775');
 }
