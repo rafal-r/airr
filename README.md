@@ -4,6 +4,7 @@ small JavaScript MVC library for building mobile hybrid apps based on Cordova an
 To see all features of this library go install WAY app:
 
 iOS: https://itunes.apple.com/us/app/way-the-app/id1234098502
+
 Android: https://play.google.com/store/apps/details?id=pl.airr.way
 
 # prerequisites
