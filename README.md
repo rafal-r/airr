@@ -11,7 +11,7 @@ Android: https://play.google.com/store/apps/details?id=pl.airr.way
 installed node.js and cordova
 
 # example installation
-with your command shell go to downloaded repo directory and run in this order:
+with your command shell go to downloaded or cloned repo directory and run in this order:
 
 1. `npm install`
 2. `cordova platform add (android | ios)`
