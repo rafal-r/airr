@@ -1,7 +1,7 @@
 # airr
 small JavaScript MVC library for building mobile hybrid apps based on Cordova and HTML5. Supports Android 4+ and iOS 7+ webviews runtimes.
 
-To see all features of this library go install WAY app:
+Example app that was built upon this library:
 
 iOS: https://itunes.apple.com/us/app/way-the-app/id1234098502
 
